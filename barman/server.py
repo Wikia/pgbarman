@@ -565,7 +565,9 @@ class Server(object):
                 mode = "a%s" % mode[1:]
         xlogdb_lock = xlogdb + ".lock"
         with lockfile(xlogdb_lock, wait=True):
-            with open(xlogdb, mode) as f:
+            # buffer size set to zero to help maintain consistency and isolation
+            # within the critical section
+            with open(xlogdb, mode, 0) as f:
                 yield f
 
     def xlogdb_parse_line(self, line):
