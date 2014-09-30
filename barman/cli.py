@@ -66,23 +66,30 @@ def list_server(minimal=False):
         output.result('list_server', name, server.config.description)
     output.close_and_exit()
 
-
-def cron():
-    """
-    Run maintenance tasks
-    """
-    lockname = os.path.join(barman.__config__.barman_home, '.cron.lock')
+def _do_cron(server):
     try:
+        lockname = os.path.join(barman.__config__.barman_home, '.cron.lock.{server}'.format(server=server.config.name))
         with lockfile.LockFile(lockname, raise_if_fail=True):
-            servers = [Server(conf) for conf in barman.__config__.servers()]
-            for server in servers:
-                server.cron()
+            server.cron()
     except lockfile.LockFileBusy:
-        output.info("Another cron is running")
+        output.info("Another cron is running on {server}".format(server=server.config.name))
 
     except lockfile.LockFilePermissionDenied:
         output.error("Permission denied, unable to access '%s'",
                      lockname)
+
+
+@arg('--server', help='run cron for a server',default=None)
+def cron(server=None):
+    """
+    Run maintenance tasks
+    """
+    if server:
+        _do_cron(Server(barman.__config__.get_server(server)))
+    else:
+        servers = [Server(conf) for conf in barman.__config__.servers()]
+        for server in servers:
+            do_cron(server)
     output.close_and_exit()
 
 
