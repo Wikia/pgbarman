@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 2ndQuadrant Italia (Devise.IT S.r.L.)
+# Copyright (C) 2011-2014 2ndQuadrant Italia (Devise.IT S.r.L.)
 #
 # This file is part of Barman.
 #
@@ -18,4 +18,4 @@
 ''' This module contains the current Barman version.
 '''
 
-__version__ = '1.2.2'
+__version__ = '1.3.4-alpha.1'

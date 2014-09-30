@@ -2,7 +2,7 @@
 #
 # barman - Backup and Recovery Manager for PostgreSQL
 #
-# Copyright (C) 2011-2012  2ndQuadrant Italia (Devise.IT S.r.l.) <info@2ndquadrant.it>
+# Copyright (C) 2011-2014 2ndQuadrant Italia (Devise.IT S.r.l.) <info@2ndquadrant.it>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,21 +29,41 @@ Barman is written and maintained by PostgreSQL professionals 2ndQuadrant.
 """
 
 import sys
+
 try:
     from setuptools import setup
+    from setuptools.command.test import test as TestCommand
+
+    class PyTest(TestCommand):
+        def finalize_options(self):
+            TestCommand.finalize_options(self)
+            self.test_args = ['tests']
+            self.test_suite = True
+
+        def run_tests(self):
+            #import here, cause outside the eggs aren't loaded
+            import pytest
+
+            errno = pytest.main(self.test_args)
+            sys.exit(errno)
+    cmdclass={'test': PyTest}
+
+
 except ImportError:
     from distutils.core import setup
+    cmdclass={}
 
-if sys.version_info < (2 , 6):
-    raise SystemExit('ERROR: Barman need at least python 2.6 to work')
+if sys.version_info < (2, 6):
+    raise SystemExit('ERROR: Barman needs at least python 2.6 to work')
 
-REQUIRES = ['psycopg2', 'argh >= 0.21.2', 'python-dateutil < 2.0' , 'argcomplete']
+install_requires = ['psycopg2', 'argh >= 0.21.2', 'python-dateutil', 'argcomplete']
 
-if sys.version_info < (2 , 7):
-    REQUIRES.append('argparse')
+if sys.version_info < (2, 7):
+    install_requires.append('argparse')
 
 barman = {}
-execfile('barman/version.py', barman)
+with open('barman/version.py', 'r') as fversion:
+    exec (fversion.read(), barman)
 
 setup(
     name='barman',
@@ -51,21 +71,32 @@ setup(
     author='2ndQuadrant Italia (Devise.IT S.r.l.)',
     author_email='info@2ndquadrant.it',
     url='http://www.pgbarman.org/',
-    packages=['barman', 'barman.test', ],
+    packages=['barman', ],
     scripts=['bin/barman', ],
     data_files=[
         ('share/man/man1', ['doc/barman.1']),
         ('share/man/man5', ['doc/barman.5']),
-        ],
+    ],
     license='GPL-3.0',
     description=__doc__.split("\n")[0],
     long_description="\n".join(__doc__.split("\n")[2:]),
-    install_requires=REQUIRES,
+    install_requires=install_requires,
     platforms=['Linux', 'Mac OS X'],
     classifiers=[
+        'Environment :: Console',
+        'Development Status :: 5 - Production/Stable',
         'Topic :: System :: Archiving :: Backup',
         'Topic :: Database',
         'Topic :: System :: Recovery Tools',
-        ],
-    test_suite='barman.test',
+        'Intended Audience :: System Administrators',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+    ],
+    tests_require=['pytest', 'mock', 'pytest-capturelog', 'pytest-timeout'],
+    cmdclass=cmdclass,
+    use_2to3=True,
 )

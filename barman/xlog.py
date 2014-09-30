@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 2ndQuadrant Italia (Devise.IT S.r.L.)
+# Copyright (C) 2011-2014 2ndQuadrant Italia (Devise.IT S.r.L.)
 #
 # This file is part of Barman.
 #
@@ -22,11 +22,13 @@ about xlog files
 import re
 
 # xlog file segment name parser (regular expression)
-_xlog_re = re.compile(r'^([\dA-Fa-f]{8})(?:([\dA-Fa-f]{8})([\dA-Fa-f]{8})(?:\.[\dA-Fa-f]{8}\.backup)?|\.history)$')
+_xlog_re = re.compile(r'\b([\dA-Fa-f]{8})(?:([\dA-Fa-f]{8})([\dA-Fa-f]{8})(?:\.[\dA-Fa-f]{8}\.backup)?|\.history)\b')
+# xlog location parser for concurrent backup (regular expression)
+_location_re = re.compile(r'([\dA-F]+)/([\dA-F]+)')
 
 # Taken from xlog_internal.h from PostgreSQL sources
 XLOG_SEG_SIZE = 1 << 24
-XLOG_SEG_PER_FILE = 0xffffffff / XLOG_SEG_SIZE
+XLOG_SEG_PER_FILE = 0xffffffff // XLOG_SEG_SIZE
 XLOG_FILE_SIZE = XLOG_SEG_SIZE * XLOG_SEG_PER_FILE
 
 
@@ -37,21 +39,41 @@ class BadXlogSegmentName(Exception):
 
 
 def is_history_file(name):
-    """ Return True if the xlog is a .history, False otherwise
     """
-    return type(name) == str and name.endswith('.history')
+    Return True if the xlog is a .history file, False otherwise
+
+    :param str name: the file name to test
+    """
+    match = _xlog_re.search(name)
+    if match and match.group(0).endswith('.history'):
+        return True
+    return False
 
 
 def is_backup_file(name):
-    """ Return True if the xlog is a .backup, False otherwise
     """
-    return type(name) == str and name.endswith('.backup')
+    Return True if the xlog is a .backup file, False otherwise
+
+    :param str name: the file name to test
+    """
+    match = _xlog_re.search(name)
+    if match and match.group(0).endswith('.backup'):
+        return True
+    return False
 
 
 def is_wal_file(name):
-    """ Return True if the xlog is a regular xlog file, False otherwise
     """
-    return not is_backup_file(name) and not is_history_file(name)
+    Return True if the xlog is a regular xlog file, False otherwise
+
+    :param str name: the file name to test
+    """
+    match = _xlog_re.search(name)
+    if match \
+            and not match.group(0).endswith('.backup')\
+            and not match.group(0).endswith('.history'):
+        return True
+    return False
 
 
 def decode_segment_name(name):
@@ -104,3 +126,17 @@ def hash_dir(name):
         return name[0:16]
     else:
         return ''
+
+
+def get_offset_from_location(location):
+    """
+
+    :param location:
+    :return:
+    """
+    match = _location_re.match(location)
+    if match:
+        xlo = int(match.group(2), 16)
+        return xlo % XLOG_SEG_SIZE
+    else:
+        return None

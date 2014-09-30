@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# Copyright (C) 2011-2013 2ndQuadrant Italia (Devise.IT S.r.L.)
+# Copyright (C) 2011-2014 2ndQuadrant Italia (Devise.IT S.r.L.)
 #
 # This file is part of Barman.
 #
@@ -22,7 +22,7 @@ set -e
 BASE="$(dirname $(cd $(dirname "$0"); pwd))"
 cd "$BASE"
 
-VERSION="$(python -c 'd={}; execfile("barman/version.py", d); print d["__version__"]')"
+VERSION="$(python -c 'd={}; exec(open("barman/version.py").read(), d); print(d["__version__"])')"
 scripts/gitlog-to-changelog > ChangeLog
 git add ChangeLog
 git commit -m "Update the ChangeLog file"

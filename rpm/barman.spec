@@ -12,23 +12,30 @@
 %global __python_ver python
 %endif
 
+%global main_version 1.3.4
+# comment out the next line if not a pre-release (use '#%')
+%global extra_version alpha.1
+# Usually 1 - unique sequence for all pre-release version
+%global package_release 1
+
 %{!?pybasever: %define pybasever %(%{__python} -c "import sys;print(sys.version[0:3])")}
 %{!?python_sitelib: %define python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 %{!?python_sitearch: %define python_sitearch %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib(1)")}
 
 Summary:	Backup and Recovery Manager for PostgreSQL
 Name:		barman
-Version:	1.2.2
-Release:	1%{?dist}
+Version:	%{main_version}
+Release:	%{?extra_version:0.}%{package_release}%{?extra_version:.%{extra_version}}%{?dist}
 License:	GPLv3
 Group:		Applications/Databases
 Url:		http://www.pgbarman.org/
-Source0:	%{name}-%{version}.tar.gz
-BuildRoot: 	%{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
+Source0:	%{name}-%{version}%{?extra_version:-%{extra_version}}.tar.gz
+BuildRoot:	%{_tmppath}/%{name}-%{version}-%{release}-buildroot-%(%{__id_u} -n)
 BuildArch:	noarch
 Vendor:		2ndQuadrant Italia (Devise.IT S.r.l.) <info@2ndquadrant.it>
-Requires: 	python-abi = %{pybasever}, %{__python_ver}-psycopg2, %{__python_ver}-argh >= 0.21.2, %{__python_ver}-argcomplete, %{__python_ver}-dateutil
+Requires:	python-abi = %{pybasever}, %{__python_ver}-psycopg2, %{__python_ver}-argh >= 0.21.2, %{__python_ver}-argcomplete, %{__python_ver}-dateutil
 Requires:	/usr/sbin/useradd
+Requires:	rsync >= 3.0.4
 
 %description
 Barman (backup and recovery manager) is an administration
@@ -40,7 +47,7 @@ remote recovery, archiving and compression of WAL files and backups.
 Barman is written and maintained by PostgreSQL professionals 2ndQuadrant.
 
 %prep
-%setup -n barman-%{version} -q
+%setup -n barman-%{version}%{?extra_version:-%{extra_version}} -q
 
 %build
 %{__python} setup.py build
@@ -75,7 +82,7 @@ rm -rf %{buildroot}
 %files
 %defattr(-,root,root)
 %doc INSTALL NEWS README
-%{python_sitelib}/%{name}-%{version}-py%{pybasever}.egg-info/
+%{python_sitelib}/%{name}-%{version}%{?extra_version:_%{extra_version}}-py%{pybasever}.egg-info/
 %{python_sitelib}/%{name}/
 %{_bindir}/%{name}
 %doc %{_mandir}/man1/%{name}.1.gz
@@ -94,43 +101,61 @@ useradd -M -n -g barman -r -d /var/lib/barman -s /bin/bash \
 	-c "Backup and Recovery Manager for PostgreSQL" barman >/dev/null 2>&1 || :
 
 %changelog
-* Mon Jun 24 2013 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.2.2-1
+* Thu Aug 21 2014 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.3.3-1
+- New release 1.3.3
+
+* Tue Jun 24 2014 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.3.3-0.1.alpha.1
+- New release 1.3.3-alpha.1
+
+* Tue Apr 15 2014 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.3.2-1
+- New release 1.3.2
+
+* Mon Apr 14 2014 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.3.1-1
+- New release 1.3.1
+
+* Mon Feb  3 2014 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.3.0-1
+- New release 1.3.0
+
+* Thu Sep  5 2013 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.2.3-1
+- New release 1.2.3
+
+* Mon Jun 24 2013 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.2.2-1
 - New release 1.2.2
 
-* Mon Jun 17 2013 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.2.1-1
+* Mon Jun 17 2013 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.2.1-1
 - New release 1.2.1
 
-* Thu Jan 31 2013 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.2.0-1
+* Thu Jan 31 2013 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.2.0-1
 - New release 1.2.0
 - Depend on python-argh >= 0.21.2 and python-argcomplete
 
-* Thu Nov 29 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.1.2-1
+* Thu Nov 29 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.1.2-1
 - New release 1.1.2
 
-* Tue Oct 16 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.1.1-1
+* Tue Oct 16 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.1.1-1
 - New release 1.1.1
 
-* Fri Oct 12 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.1.0-1
+* Fri Oct 12 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.1.0-1
 - New release 1.1.0
 - Some improvements from Devrim Gunduz <devrim@gunduz.org>
 
-* Fri Jul  6 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 1.0.0-1
+* Fri Jul  6 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 1.0.0-1
 - Open source release
 
-* Thu May 17 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-5
+* Thu May 17 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-5
 - Fixed exception handling and documentation
 
-* Thu May 17 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-4
+* Thu May 17 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-4
 - Fixed documentation
 
-* Tue May 15 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-3
+* Tue May 15 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-3
 - Fixed cron job
 
-* Tue May 15 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-2
+* Tue May 15 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-2
 - Add cron job
 
-* Wed May 9 2012 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-1
+* Wed May 9 2012 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.99.0-1
 - Update to version 0.99.0
 
-* Tue Dec 6 2011 - Marco Neciarini <marco.nenciarini@2ndquadrant.it> 0.3.1-1
+* Tue Dec 6 2011 - Marco Nenciarini <marco.nenciarini@2ndquadrant.it> 0.3.1-1
 - Initial packaging.

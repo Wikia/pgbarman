@@ -2,6 +2,9 @@
 *.pyc
 *.pyo
 
+# python modules
+/*.egg
+
 # editor backups
 *~
 \#*\#
@@ -20,6 +23,7 @@
 /dist
 /build
 /barman.egg-info
+/*.egg/
 
 # OSX
 .DS_Store

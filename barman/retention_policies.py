@@ -1,4 +1,4 @@
-# Copyright (C) 2011-2013 2ndQuadrant Italia (Devise.IT S.r.L.)
+# Copyright (C) 2011-2014 2ndQuadrant Italia (Devise.IT S.r.L.)
 #
 # This file is part of Barman.
 #
@@ -27,9 +27,10 @@ recovery of those backups.
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime, timedelta
-from barman.backup import BackupInfo
 import re
 import logging
+from barman.infofile import BackupInfo
+from dateutil import tz
 
 _logger = logging.getLogger(__name__)
 
@@ -108,6 +109,12 @@ class RetentionPolicy(object):
             'The class %s must override the create() class method',
             cls.__name__)
 
+    def to_json(self):
+        """
+        Output representation of the obj for JSON serialization
+        """
+        return "%s %s %s" % (self.mode, self.value, self.unit)
+
 
 class RedundancyRetentionPolicy(RetentionPolicy):
     '''
@@ -120,7 +127,7 @@ class RedundancyRetentionPolicy(RetentionPolicy):
 
     def __init__(self, context, value, server):
         super(RedundancyRetentionPolicy, self
-              ).__init__('redundancy', 'r', value, 'BASE', server)
+              ).__init__('redundancy', 'b', value, 'BASE', server)
         assert (value >= 0)
 
     def __str__(self):
@@ -221,7 +228,7 @@ class RecoveryWindowRetentionPolicy(RetentionPolicy):
         of recoverability, which will be then used to define the first
         backup or the first WAL
         '''
-        return datetime.now() - self.timedelta
+        return datetime.now(tz.tzlocal()) - self.timedelta
 
     def _backup_report(self):
         '''Report obsolete/valid backups according to the retention policy'''
@@ -363,5 +370,6 @@ class RetentionPolicyFactory(object):
             policy = policy_class.create(server, context, value)
             if policy:
                 return policy
-        raise Exception('Cannot parse option %s: %s' % (option, value))
+
+        raise ValueError('Cannot parse option %s: %s' % (option, value))
 
